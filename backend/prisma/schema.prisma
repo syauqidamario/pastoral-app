@@ -1,0 +1,41 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// 1. Tabel Wilayah
+model Wilayah {
+  id          Int          @id @default(autoincrement())
+  namaWilayah String
+  lingkungan  Lingkungan[]
+}
+
+// 2. Tabel Lingkungan
+model Lingkungan {
+  id            Int            @id @default(autoincrement())
+  namaLingkungan String
+  wilayahId     Int
+  wilayah       Wilayah        @relation(fields: [wilayahId], references: [id])
+  umat          Umat[]
+}
+
+// 3. Tabel Umat
+model Umat {
+  id           String     @id @default(uuid()) // Menggunakan UUID agar lebih aman
+  namaLengkap  String
+  namaBaptis   String?    // Tanda tanya (?) berarti boleh kosong (nullable)
+  lingkunganId Int
+  lingkungan   Lingkungan @relation(fields: [lingkunganId], references: [id])
+  
+  // Status Sakramen
+  sudahBaptis  Boolean    @default(false)
+  sudahKomuni  Boolean    @default(false)
+  sudahKrisma  Boolean    @default(false)
+  sudahMenikah Boolean    @default(false)
+  
+  statusAktif  String     @default("aktif") // aktif, pindah, meninggal
+}
