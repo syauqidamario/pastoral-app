@@ -5,11 +5,10 @@ import DaftarUmat from "./pages/DaftarUmat";
 import TambahUmat from "./pages/TambahUmat";
 import KelolaLingkungan from "./pages/KelolaLingkungan";
 import Login from "./pages/Login";
-import InboxPengajuan from "./pages/InboxPengajuan"; // Import halaman inbox validasi berkas
+import InboxPengajuan from "./pages/InboxPengajuan";
+import About from "./pages/About"; // 👈 Import Baru
+import Topics from "./pages/Topics"; // 👈 Import Baru
 
-// ====================================================
-// STRUCTURE INTERFACES (STRUKTUR DATA SAKRAMEN RELASIONAL)
-// ====================================================
 export interface DataBaptis {
   id: number;
   tanggalBaptis: string;
@@ -61,21 +60,16 @@ interface Wilayah {
   lingkungan: Lingkungan[];
 }
 
-// ====================================================
-// MAIN COMPONENT APPLICATION
-// ====================================================
 function App() {
   const [umat, setUmat] = useState<Umat[]>([]);
   const [lingkunganList, setLingkunganList] = useState<Lingkungan[]>([]);
   const [wilayahList, setWilayahList] = useState<Wilayah[]>([]);
 
-  // Status Akun Login (WARGA / KETUA_LINGKUNGAN / PASTOR / null)
   const [role, setRole] = useState<
     "WARGA" | "KETUA_LINGKUNGAN" | "PASTOR" | null
   >(null);
   const [username, setUserName] = useState("");
 
-  // Menentukan status hak akses pengurus (Admin)
   const isAdmin = role === "PASTOR" || role === "KETUA_LINGKUNGAN";
 
   useEffect(() => {
@@ -88,7 +82,6 @@ function App() {
     fetchWilayah();
   };
 
-  // 📡 PENGAMBILAN DATA (API GET FETCH)
   const fetchUmat = async () => {
     try {
       const response = await axios.get<Umat[]>(
@@ -96,7 +89,7 @@ function App() {
       );
       setUmat(response.data);
     } catch (error) {
-      console.error("Gagal mengambil data umat:", error);
+      console.error(error);
     }
   };
 
@@ -107,7 +100,7 @@ function App() {
       );
       setLingkunganList(response.data);
     } catch (error) {
-      console.error("Gagal mengambil data lingkungan:", error);
+      console.error(error);
     }
   };
 
@@ -118,40 +111,36 @@ function App() {
       );
       setWilayahList(response.data);
     } catch (error) {
-      console.error("Gagal mengambil data wilayah:", error);
+      console.error(error);
     }
   };
 
-  // ➕ HANDLER: Menambah Umat Baru Dasar
   const handleTambahUmat = async (nama: string, idLingkungan: number) => {
     try {
       await axios.post("http://localhost:5001/api/umat", {
         namaLengkap: nama,
         lingkunganId: idLingkungan,
       });
-      fetchUmat(); // Refresh tabel setelah ditambah
+      fetchUmat();
     } catch (error) {
-      console.error("Gagal menambah umat:", error);
+      console.error(error);
     }
   };
 
-  // 🗑️ HANDLER: Menghapus Data Umat dari Database
   const handleHapusUmat = async (id: string) => {
     try {
       await axios.delete(`http://localhost:5001/api/umat/${id}`);
-      fetchUmat(); // Refresh tabel setelah dihapus
+      fetchUmat();
     } catch (error) {
-      console.error("Gagal menghapus data:", error);
-      alert("Gagal menghapus data umat dari server.");
+      console.error(error);
+      alert("Gagal menghapus data.");
     }
   };
 
   return (
     <BrowserRouter>
       <div style={{ padding: "20px", fontFamily: "sans-serif" }}>
-        {/* ==================================================== */}
-        {/* HEADER APLIKASI (Hanya muncul jika sudah login) */}
-        {/* ==================================================== */}
+        {/* Header Bar */}
         {role && (
           <div
             style={{
@@ -203,11 +192,16 @@ function App() {
           </div>
         )}
 
-        {/* ==================================================== */}
-        {/* MENU NAVIGASI UTAMA (Hanya muncul jika sudah login) */}
-        {/* ==================================================== */}
+        {/* Menu Navigasi Utama */}
         {role && (
-          <nav style={{ margin: "20px 0", display: "flex", gap: "15px" }}>
+          <nav
+            style={{
+              margin: "20px 0",
+              display: "flex",
+              gap: "15px",
+              flexWrap: "wrap",
+            }}
+          >
             <Link
               to="/"
               style={{
@@ -218,8 +212,32 @@ function App() {
             >
               📋 Daftar Umat
             </Link>
+
+            {/* 🌐 Menu Baru: Terbuka untuk semua Level Akses (Warga & Admin) */}
+            <Link
+              to="/topics"
+              style={{
+                textDecoration: "none",
+                color: "#17a2b8",
+                fontWeight: "bold",
+              }}
+            >
+              📰 Topik Pastoral
+            </Link>
+            <Link
+              to="/about"
+              style={{
+                textDecoration: "none",
+                color: "#6f42c1",
+                fontWeight: "bold",
+              }}
+            >
+              ⛪ Tentang Paroki
+            </Link>
+
             {isAdmin && (
               <>
+                <span style={{ color: "#ccc" }}>|</span>
                 <Link
                   to="/tambah"
                   style={{
@@ -257,11 +275,8 @@ function App() {
 
         {role && <hr />}
 
-        {/* ==================================================== */}
-        {/* PEMETAAN RUTE JALUR HALAMAN (ROUTING SYSTEM) */}
-        {/* ==================================================== */}
+        {/* Pemetaan Rute Halaman */}
         <Routes>
-          {/* Gerbang Login Utama */}
           <Route
             path="/login"
             element={
@@ -273,7 +288,6 @@ function App() {
             }
           />
 
-          {/* Halaman Utama: Daftar Tabel Berkas Umat */}
           <Route
             path="/"
             element={
@@ -285,7 +299,17 @@ function App() {
             }
           />
 
-          {/* Halaman Tambah Umat Baru (Khusus Pengurus) */}
+          {/* Rute Halaman Umum Baru */}
+          <Route
+            path="/about"
+            element={role ? <About /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/topics"
+            element={role ? <Topics /> : <Navigate to="/login" />}
+          />
+
+          {/* Rute Khusus Admin */}
           <Route
             path="/tambah"
             element={
@@ -299,8 +323,6 @@ function App() {
               )
             }
           />
-
-          {/* Halaman Kelola Struktur Hierarki Wilayah/Lingkungan (Khusus Pengurus) */}
           <Route
             path="/kelola"
             element={
@@ -314,8 +336,6 @@ function App() {
               )
             }
           />
-
-          {/* Halaman Kotak Masuk Validasi Pengajuan Sakramen (Khusus Pengurus) */}
           <Route
             path="/inbox"
             element={
