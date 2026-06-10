@@ -16,26 +16,111 @@ model Wilayah {
 
 // 2. Tabel Lingkungan
 model Lingkungan {
-  id            Int            @id @default(autoincrement())
+  id             Int        @id @default(autoincrement())
   namaLingkungan String
-  wilayahId     Int
-  wilayah       Wilayah        @relation(fields: [wilayahId], references: [id])
-  umat          Umat[]
+  wilayahId      Int
+  wilayah        Wilayah    @relation(fields: [wilayahId], references: [id])
+  umat           Umat[]
+  users          User[]     
 }
 
-// 3. Tabel Umat
+// 3. Tabel Utama Umat
 model Umat {
-  id           String     @id @default(uuid()) // Menggunakan UUID agar lebih aman
+  id           String          @id @default(uuid())
   namaLengkap  String
-  namaBaptis   String?    // Tanda tanya (?) berarti boleh kosong (nullable)
+  namaBaptis   String?    
   lingkunganId Int
-  lingkungan   Lingkungan @relation(fields: [lingkunganId], references: [id])
+  lingkungan   Lingkungan      @relation(fields: [lingkunganId], references: [id])
   
-  // Status Sakramen
-  sudahBaptis  Boolean    @default(false)
-  sudahKomuni  Boolean    @default(false)
-  sudahKrisma  Boolean    @default(false)
-  sudahMenikah Boolean    @default(false)
+  dataBaptis   DataBaptis?
+  dataKrisma   DataKrisma?
+  pernikahan   DataPernikahan?
+  pengajuan    Pengajuan[]     // 👈 Relasi Baru: Satu umat bisa punya banyak riwayat pengajuan berkas
+
+  statusAktif  String          @default("aktif")
+}
+
+// 4. Tabel Detail Sakramen Baptis
+model DataBaptis {
+  id            Int      @id @default(autoincrement())
+  umatId        String   @unique 
+  umat          Umat     @relation(fields: [umatId], references: [id], onDelete: Cascade)
   
-  statusAktif  String     @default("aktif") // aktif, pindah, meninggal
+  tanggalBaptis DateTime
+  tempatBaptis  String   
+  nomorLB       String   
+  namaRomo      String
+  waliBaptis    String   
+}
+
+// 5. Tabel Detail Sakramen Krisma
+model DataKrisma {
+  id             Int      @id @default(autoincrement())
+  umatId         String   @unique
+  umat           Umat     @relation(fields: [umatId], references: [id], onDelete: Cascade)
+  
+  tanggalKrisma  DateTime
+  nomorLC        String   
+  namaUskupRomo  String
+  namaPelindung  String   
+}
+
+// 6. Tabel Detail Sakramen Pernikahan
+model DataPernikahan {
+  id                Int      @id @default(autoincrement())
+  umatId            String   @unique
+  umat              Umat     @relation(fields: [umatId], references: [id], onDelete: Cascade)
+  
+  namaPasangan      String
+  tanggalPernikahan DateTime
+  nomorLM           String   
+  tempatMenikah     String
+  namaSaksi1        String
+  namaSaksi2        String
+}
+
+// 7. SKEMA BARU: Alur Verifikasi & Persetujuan Sakramen
+enum StatusPengajuan {
+  PENDING           // Baru diajukan oleh Warga
+  DISETUJUI_KETUA   // Lolos sensor Ketua Lingkungan
+  VERIFIED_PASTOR   // Sah diketok palu oleh Romo Pastor & masuk ke tabel utama
+  DITOLAK           // Ditolak (karena berkas palsu/salah ketik)
+}
+
+enum JenisSakramen {
+  BAPTIS
+  KRISMA
+  PERNIKAHAN
+}
+
+model Pengajuan {
+  id               String          @id @default(uuid())
+  umatId           String
+  umat             Umat            @relation(fields: [umatId], references: [id], onDelete: Cascade)
+  
+  jenisSakramen    JenisSakramen
+  status           StatusPengajuan @default(PENDING)
+  catatanPenolakan String?         // Catatan alasan penolakan dari pengurus
+  
+  // Kita simpan draf data form buatan warga dalam format String JSON agar fleksibel
+  dataForm         String          
+  
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+}
+
+// 8. Tabel Akun Pengguna
+enum Role {
+  WARGA
+  KETUA_LINGKUNGAN
+  PASTOR
+}
+
+model User {
+  id           String      @id @default(uuid())
+  username     String      @unique
+  password     String      
+  role         Role        @default(WARGA)
+  lingkunganId Int?        
+  lingkungan   Lingkungan? @relation(fields: [lingkunganId], references: [id])
 }
