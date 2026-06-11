@@ -1,0 +1,77 @@
+/* Reset Dasar */
+body {
+  margin: 0;
+  background-color: #f1f5f9;
+  color: #1e293b;
+}
+
+/* CONTAINER RESPONSIF UTAMA */
+.app-container {
+  padding: 15px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* STRUKTUR DUA PANEL (FORM vs TABEL) */
+.dashboard-grid {
+  display: flex;
+  gap: 20px;
+  flex-direction: row; /* Default: Berdampingan di layar lebar */
+}
+
+.panel-form {
+  flex: 1;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  height: fit-content;
+}
+
+.panel-tabel {
+  flex: 2;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* BUNGKUSAN TABEL BIAR BISA DI-SCROLL DI HP */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-custom {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 500px; /* Memastikan tabel tidak gepeng di layar kecil */
+}
+
+/* ==================================================== */
+/* 📱 BREAKPOINT MEDIA QUERIES: RESPONSIVE MOBILE SCRIPT */
+/* ==================================================== */
+@media (max-width: 768px) {
+  /* Di layar HP/Tablet, paksa posisi panel menumpuk ke bawah, bukan berdampingan */
+  .dashboard-grid {
+    flex-direction: column;
+  }
+
+  .app-container {
+    padding: 10px;
+  }
+
+  /* Buat barisan form menjadi satu kolom penuh di HP */
+  .form-row-flex {
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+
+  /* Header atas menyesuaikan ruang sempit */
+  .header-bar {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 12px;
+  }
+}

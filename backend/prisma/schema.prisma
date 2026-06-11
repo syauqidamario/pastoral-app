@@ -1,0 +1,53 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./buku_baptis.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model BukuBaptis {
+  id               String    @id @default(uuid())
+  nomorLB          String    @unique 
+
+  // Data Induk Baptisan
+  namaLengkap      String
+  tempatLahir      String
+  tanggalLahir     DateTime
+  namaAyah         String
+  namaIbu          String
+  tanggalBaptis    DateTime
+  tempatBaptis     String    @default("Gereja Paroki")
+  namaRomo         String
+  waliBaptisPria   String
+  waliBaptisWanita String
+
+  // Catatan Sakramen Lanjutan (Gabungan)
+  tanggalKrisma    DateTime?
+  tempatKrisma     String?
+  nomorLC          String?   
+  tanggalNikah     DateTime?
+  tempatNikah      String?
+  nomorLM          String?   
+  namaPasangan     String?
+  catatanPinggirLain String? 
+
+  // Relasi Balik ke Akun User (1-to-1)
+  user             User?
+
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+// 🔐 TABEL BARU: Autentikasi Multi-Role
+model User {
+  id           String      @id @default(uuid())
+  username     String      @unique // 'adminparoki' ATAU Nomor LB untuk umat
+  password     String
+  role         String      // "ADMIN" atau "UMAT"
+  
+  // Menghubungkan akun umat ke lembar baptisnya
+  bukuId       String?     @unique
+  bukuBaptis   BukuBaptis? @relation(fields: [bukuId], references: [id], onDelete: Cascade)
+}
